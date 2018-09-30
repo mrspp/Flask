@@ -1,0 +1,12 @@
+{% extends 'layout.html'%}
+
+{% block body %}
+    <h1>Articles</h1>
+    <hr>
+    <table class="table table-striped">
+        {% for article in articles %}
+            <tr>
+                <td> <a href="/articles/{{article[0]}}" target="_blank">{{article[1]}}</a></td>
+        {% endfor %}
+    </table>
+{% endblock %}
