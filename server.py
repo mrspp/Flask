@@ -1,9 +1,11 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
+from flask import Flask, render_template, flash, redirect, url_for, session, request, logging, Markup, jsonify
 #from data import Articles
 from flaskext.mysql import MySQL 
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
+from werkzeug.utils import secure_filename
+import os
 
 mysql = MySQL()
 server = Flask(__name__,
@@ -215,6 +217,34 @@ def delete_article(id):
     cur.close()
     flash('Article Deleted', 'success')
     return redirect(url_for('dashboard'))
+
+UPLOAD_FOLDER = 'uploads/img'
+server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@server.route('/add_image', methods=['GET','POST'])
+@is_logged_in
+def add_img():
+    if request.method == 'POST':
+        f = request.files['file']
+        p = os.path.join(server.config['UPLOAD_FOLDER'], secure_filename(f.filename))
+        f.save(p)
+        flash('Image uploaded')
+        return render_template('add_image.html')
+    return render_template('add_image.html')
+
+@server.route('/api/posts', methods = ['GET'])
+def posts():
+    cur=mysql.get_db().cursor()
+    result = cur.execute('SELECT * FROM articles')
+    articles = cur.fetchall()
+    if result > 0:
+        return jsonify(articles)
+    else:
+        msg = 'No Article Found'
+        return jsonify(articles)
+    cur.close()
+
+
 
 if __name__ == '__main__':
     server.run(debug=True)
